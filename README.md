@@ -4,89 +4,36 @@
 
 # NYC Citi Bike — Demand & Rider Behaviour Analysis
 
-> **Exploratory analysis of 18,449 bike-share trips to understand demand concentration, rider behaviour, and how outliers can distort business conclusions.**
+> **What can 18,449 bike rides tell us about how people actually use a bike-share system?**
 
 [![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python)](https://www.python.org/)
 [![Pandas](https://img.shields.io/badge/Pandas-Data%20Analysis-150458?logo=pandas)](https://pandas.pydata.org/)
 [![Matplotlib](https://img.shields.io/badge/Matplotlib-Visualization-orange)](https://matplotlib.org/)
 [![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-F37626?logo=jupyter)](https://jupyter.org/)
 
----
+I analysed one year of Citi Bike data from the Jersey City service area to look at demand, rider behaviour, trip duration and a few assumptions that the data might tempt us to make.
 
-## The question
+The dataset contains **20,400 raw records**, which became **18,449 trips** after cleaning, covering **50 stations and 500 bikes** from January to December 2017.
 
-**What does the data tell us about how people actually use a bike-share system — and which conclusions can we trust?**
-
-I analysed NYC Citi Bike trip data from the Jersey City service area to identify:
-
-* Where demand is concentrated
-* When the system is most heavily used
-* Who the riders are
-* Whether age is related to trip duration
-* How subscriber and casual usage differs
-* How outliers can create misleading business conclusions
-
-The analysis covers **20,400 raw records**, reduced to **18,449 cleaned trips** across **50 stations and 500 bikes**, spanning January to December 2017.
-
-> **Basis for every figure below:** all statistics are computed on the full 18,449-row cleaned dataset, with no records excluded. This matters — the notebook drops the single longest trip partway through, which shifts every downstream count. Where that distinction changes a number, it is called out explicitly.
+One important note: the numbers below are based on the full cleaned dataset. The notebook removes the single longest trip later in the analysis, so some numbers there will differ slightly.
 
 ---
 
-## Executive Summary
+## A few things stood out
 
-### 1. The system is primarily commuter infrastructure
+### 98.1% of trips are made by subscribers
 
-**98.1% of trips come from subscribers.**
+Citi Bike looks much more like everyday transportation than a weekend leisure service.
 
-Average weekday demand is approximately **75% higher than weekend demand** (3,003 vs 1,716 trips per day), with Wednesday the busiest day.
+Average weekday demand is around **75% higher than weekend demand** — 3,003 vs 1,716 trips per day.
 
-This suggests the system is used predominantly as **everyday transportation rather than weekend leisure**.
-
-### 2. Demand is highly concentrated
-
-**Grove St PATH alone accounts for 12.6% of all trips.**
-
-The three busiest stations — Grove St PATH, Exchange Place and Hamilton Park — account for approximately **26% of total demand**.
-
-These locations are closely connected to major transit routes, highlighting the importance of **first/last-mile transportation and station rebalancing**.
-
-### 3. Age does not meaningfully explain trip duration
-
-The correlation between age and trip duration is:
-
-**r = -0.002**
-
-In practical terms, there is **no meaningful linear relationship** between the two variables.
-
-Trip duration appears to be driven much more by the journey itself than by the rider's age.
-
-### 4. One outlier completely changes the story
-
-The 75+ age group has an average trip duration of **47.9 minutes**.
-
-That sounds significant — until you look at the distribution.
-
-The group's median trip duration is only **4 minutes**, based on 57 trips.
-
-One **2,422-minute trip** is responsible for most of the difference. That single ride accounts for **88.8% of every minute the group logged**. Remove it and the average falls to **5.5 minutes**.
-
-Without checking the distribution, this could easily become a misleading statement such as:
-
-> "Older riders take substantially longer trips."
-
-The data does not support that conclusion.
-
-### 5. The biggest lesson is methodological
-
-**Averages can be technically correct and still tell the wrong story.**
-
-For skewed operational data, especially when sample sizes are small, the median and distribution should be examined before turning an aggregate statistic into a business conclusion.
+Wednesday is the busiest day with **3,633 trips**.
 
 ---
 
-## Key Insights
+### Demand is concentrated around a few stations
 
-### 🚲 Demand is concentrated around transit
+The busiest stations are:
 
 | Station        | Trips |
 | -------------- | ----: |
@@ -96,17 +43,29 @@ For skewed operational data, especially when sample sizes are small, the median 
 | Sip Ave        | 1,184 |
 | Morris Canal   |   768 |
 
-The top stations are not randomly distributed. Grove St PATH and Exchange Place — the two busiest — are both PATH train stops, as is Newport PATH at sixth. This suggests Citi Bike is functioning heavily as a **last-mile mobility network** feeding rail.
+Grove St PATH alone accounts for **12.6% of all trips**.
 
-Note how close Hamilton Park and Sip Ave are — 1,185 against 1,184. A single trip separates third place from fourth, so any ranking below the top two should be treated as a tie rather than an order.
+The top three stations account for roughly **26% of total demand**.
 
-**Business implication:** rebalancing resources should be concentrated around high-volume transit hubs rather than distributed evenly across the network, and timed to train schedules rather than to bike demand alone.
+And there's an interesting pattern here: Grove St PATH and Exchange Place are PATH train stations, while Newport PATH also appears near the top.
+
+That makes sense if Citi Bike is being used for the **first or last part of a commute**.
+
+It also means that simply spreading bikes evenly across the network probably isn't the best way to manage supply. The busy transit stations are where the demand is.
 
 ![Station demand](docs/images/01-hero-top-pickup-locations.png)
 
+Worth noting that Hamilton Park and Sip Ave are separated by a single trip — 1,185 against 1,184. Below the top two, that ordering is effectively a tie.
+
 ---
 
-### 📊 Trip duration is heavily right-skewed
+## Trip duration is not normally distributed
+
+The average trip is **9.6 minutes**.
+
+The median is **5 minutes**.
+
+That's a pretty big difference.
 
 | Metric  |  Duration |
 | ------- | --------: |
@@ -115,59 +74,103 @@ Note how close Hamilton Park and Sip Ave are — 1,185 against 1,184. A single t
 | Minimum |     1 min |
 | Maximum | 6,515 min |
 
-The mean is almost twice the median.
+The longest trip lasted more than **108 hours**.
 
-The maximum trip lasted more than **108 hours**, which is highly unlikely to represent a normal bike journey and is more plausibly a data-quality or unreturned-bike record. 103 trips exceed one hour.
+There are **103 trips longer than one hour**.
 
-This is why the analysis does not treat the mean as sufficient evidence on its own.
+That doesn't necessarily mean 103 people decided to go on extremely long bike rides. Some of these are probably bikes that weren't returned properly or other data-quality issues.
+
+The important part is that a handful of extreme values can have a big effect on the average.
+
+So when looking at trip duration, **the median tells us much more about the typical ride than the mean does.**
 
 ![Trip duration distribution](docs/images/07-trip-duration-distribution.png)
 
 ---
 
-### 🔎 The 75+ finding disappears when the distribution is examined
+## Then there is the 75+ group
 
-| Age group |         Mean |    Median | Trips |
-| --------- | -----------: | --------: | ----: |
-| 18–24     |     11.9 min |    10 min |    56 |
-| 25–34     |      9.0 min |     6 min | 4,434 |
-| 35–44     |     10.3 min |     5 min | 8,377 |
-| 45–54     |      8.1 min |     5 min | 3,238 |
-| 55–64     |     10.2 min |     6 min | 1,600 |
-| 65–74     |      7.4 min |     6 min |   687 |
-| 75+       | **47.9 min** | **4 min** |    57 |
+This is where the data gets interesting.
 
-The 75+ group's average is driven by a single **2,422-minute observation**. 54 of the group's 57 trips lasted under 10 minutes.
+At first glance, riders aged 75+ look like they take dramatically longer trips than everyone else:
 
-Read by mean, the 75+ group looks like the longest riders in the system. Read by median, they are the **shortest**.
+| Age   |         Mean |    Median | Trips |
+| ----- | -----------: | --------: | ----: |
+| 18–24 |     11.9 min |    10 min |    56 |
+| 25–34 |      9.0 min |     6 min | 4,434 |
+| 35–44 |     10.3 min |     5 min | 8,377 |
+| 45–54 |      8.1 min |     5 min | 3,238 |
+| 55–64 |     10.2 min |     6 min | 1,600 |
+| 65–74 |      7.4 min |     6 min |   687 |
+| 75+   | **47.9 min** | **4 min** |    57 |
+
+The average says **47.9 minutes**.
+
+The median says **4 minutes**.
+
+So what's going on?
+
+One ride.
+
+A single **2,422-minute trip** accounts for **88.8% of all minutes logged by the 75+ group**.
+
+Remove that one row and their average drops from **47.9 minutes to 5.5 minutes**.
+
+And 54 of their 57 trips lasted less than 10 minutes.
 
 ![Trip duration by age group, mean versus median](docs/images/06-mean-vs-median-by-age-group.png)
 
-This is a useful example of why:
+So depending on which statistic you look at, you could tell two completely different stories:
 
-**mean → investigate → visualize → validate → conclude**
+> *"Older riders take much longer trips."*
 
-rather than:
+or
 
-**mean → story**
+> *"Older riders have the shortest median trip duration."*
+
+The second one is much closer to what is actually happening.
 
 ---
 
-### 👥 The rider base is concentrated in ages 25–54
+## Age doesn't explain trip duration
 
-The **25–54 age range accounts for 87% of all trips**.
+The correlation between age and trip duration is:
 
-The 35–44 group alone represents 8,377 trips, making it by far the largest rider segment in the dataset.
+**r = -0.002**
 
-At the same time, riders under 25 account for only **56 trips** — 0.3% of the dataset — making them almost absent from this sample.
+Basically zero.
 
-This creates an interesting business question around pricing, awareness and adoption — but the dataset alone does not establish the reason.
+The scatter plot tells the same story: there is a dense band of short trips across almost every age, with some extreme values scattered around it.
+
+![Age versus trip duration](docs/images/05-age-vs-trip-duration.png)
+
+So there isn't much evidence here that **age is a useful predictor of how long someone rides**.
+
+---
+
+## Who actually uses the system?
+
+The rider base is heavily concentrated between 25 and 54.
+
+**87% of all trips** come from this age range.
+
+The 35–44 group alone accounts for **8,377 trips**.
+
+At the other end, riders under 25 account for only **56 trips**, or 0.3% of the dataset.
 
 ![Rentals by age group](docs/images/03-rentals-by-age-group.png)
 
+That's interesting, but the data doesn't tell us *why*.
+
+It could be pricing, awareness, demographics, availability, sampling or something else entirely.
+
+I'd treat it as a question worth investigating, not as an explanation.
+
 ---
 
-### 📅 Weekday and weekend usage behave differently
+## Weekdays vs weekends
+
+The weekday/weekend split is pretty clear:
 
 | Day       | Subscriber | One-time |     Total |
 | --------- | ---------: | -------: | --------: |
@@ -179,148 +182,165 @@ This creates an interesting business question around pricing, awareness and adop
 | Saturday  |      1,612 |  **102** |     1,714 |
 | Sunday    |      1,651 |       68 |     1,719 |
 
-The pattern suggests two distinct usage behaviours:
+The pattern suggests two fairly different types of usage:
 
-**Weekdays → subscription / commuting**
+**Weekdays → subscribers / commuting**
 
-**Weekends → lower overall demand + relatively more casual users**
+**Weekends → lower demand / relatively more casual riders**
 
-Saturday is particularly interesting: it has the **highest number of one-time users**, despite having the lowest total ride volume. Casual riders make up 6.0% of Saturday trips against 0.6% on Thursday — a tenfold difference in composition.
+Saturday is particularly interesting.
+
+It has the **highest number of one-time users**, even though it has the lowest total number of rides.
+
+Casual riders make up **6.0% of Saturday trips**, compared with just **0.6% on Thursday**.
+
+That's a tenfold difference in the composition of riders.
 
 ![Usage by weekday and user type](docs/images/04-rentals-by-usertype-weekday.png)
 
 ---
 
-### 📉 Age and trip duration are unrelated
+# What would I do with this?
 
-![Age versus trip duration](docs/images/05-age-vs-trip-duration.png)
+If I were managing the system, a few things would stand out:
 
-The scatter shows the same thing the correlation coefficient does: a dense band of short trips at every age, with scattered extreme values following no age pattern.
+### 1. Rebalance around transit stations
 
----
+The demand isn't evenly distributed.
 
-## Business Recommendations
+Grove St PATH and Exchange Place alone generate a huge amount of activity, so those locations deserve more attention than an average station.
 
-| Priority  | Recommendation                                             | Why                                           |
-| --------- | ---------------------------------------------------------- | --------------------------------------------- |
-| 🔴 High   | Prioritize rebalancing around the busiest transit stations | Top 3 stations generate ~26% of trips         |
-| 🔴 High   | Align operational capacity with weekday demand             | Weekday demand is ~75% higher than weekends   |
-| 🟠 Medium | Focus casual-user acquisition on weekends                  | Casual usage is relatively concentrated there |
-| 🟠 Medium | Use median duration alongside mean                         | Trip duration contains extreme outliers       |
-| 🟢 Low    | Investigate the under-25 adoption gap                      | Only 56 trips come from riders under 25       |
+### 2. Plan for weekday demand
 
-### What I would *not* recommend
+Weekday demand is roughly **75% higher than weekends**.
 
-I would **not** recommend age-specific product or marketing decisions based on trip duration.
+That should influence how bikes and operational resources are allocated.
 
-The correlation between age and duration is essentially zero, and the most visually dramatic age-group result is explained by a single outlier.
+### 3. Look at weekends for casual-user acquisition
+
+Saturday has the highest number and proportion of one-time users.
+
+If the goal is to convert casual riders into subscribers, this looks like a much more interesting segment to investigate.
+
+### 4. Don't build an age strategy around trip duration
+
+The correlation is basically zero.
+
+And the most dramatic result — the 75+ group — disappears once you look at the underlying trips.
 
 **The data isn't strong enough to support that conclusion.**
 
 ---
 
-## Analytical Approach
+# How I approached it
 
-The analysis follows a simple analytical workflow:
+Nothing particularly fancy.
 
 ```text
 Raw Data
    ↓
-Data Cleaning
+Cleaning
    ↓
-Exploratory Analysis
+Exploration
    ↓
-Distribution & Outlier Analysis
+Distributions & Outliers
    ↓
 Segmentation
    ↓
-Visual Validation
+Visualisation
    ↓
-Business Recommendations
+Conclusions
 ```
 
-### Data preparation
+### Cleaning
 
-* Removed duplicate records
-* Removed rows containing missing values
-* Converted trip duration from text to numeric (stripping thousands separators)
-* Parsed timestamps into datetime fields
-* Used temporal variables such as weekday and month
-* Reduced the dataset from **20,400 → 18,449 records** (9.6% removed)
+* Removed duplicates
+* Removed rows with missing values
+* Converted trip duration to numeric
+* Parsed timestamps
+* Created weekday/month variables
+* Reduced the dataset from **20,400 → 18,449 trips**
 
 ### Analysis
 
-The analysis uses:
+I looked at:
 
-* Descriptive statistics
-* Distribution analysis
-* Grouped aggregations
-* Cross-tabulation
-* Correlation analysis
-* Outlier investigation
-* Station demand ranking
-* Age segmentation
-* Subscriber vs. casual-user analysis
-* Data visualization
+* Trip volume
+* Station demand
+* Weekday vs weekend behaviour
+* Subscriber vs one-time users
+* Age groups
+* Trip duration
+* Correlation
+* Distributions and outliers
 
 ---
 
-## Tech Stack
+## Tech
 
 **Python**
-**Pandas** — data cleaning, transformation and analysis
-**Matplotlib** — visualization
-**Jupyter Notebook** — analysis and documentation
+**Pandas** — cleaning and analysis
+**Matplotlib** — visualisation
+**Jupyter Notebook** — analysis
 
 ---
 
-## Repository Structure
+## Repository
 
 ```text
 nyc-bikeshare-demand-analysis/
 │
-├── notebook.ipynb                                  # Full analysis
-├── New York Citi Bikes_Raw Data - NYCitiBikes.csv  # Raw data (20,400 rows)
-├── bikes_dataset.csv                               # Cleaned data
+├── notebook.ipynb
+├── New York Citi Bikes_Raw Data - NYCitiBikes.csv
+├── bikes_dataset.csv
 │
 └── docs/
-    └── images/                                     # Charts used in this case study
+    └── images/
 ```
 
-The notebook contains the complete analysis and reproduces the statistics and visualizations presented in this case study.
-
----
-
-## Run the Analysis
+The notebook contains the full analysis.
 
 ```bash
 git clone https://github.com/niksaderek/nyc-bikeshare-demand-analysis.git
-
 cd nyc-bikeshare-demand-analysis
-
 pip install pandas matplotlib jupyter
-
 jupyter notebook notebook.ipynb
 ```
 
 ---
 
-## Data Source
-
-The analysis uses publicly available Citi Bike trip data covering the Jersey City service area in 2017, containing ride timestamps, start and end stations, bike identifiers, user type, birth year and derived temporal fields.
-
----
-
-## Final Takeaway
+# The part I found most interesting
 
 The most important finding isn't that Wednesday is the busiest day or that Grove St PATH is the most popular station.
 
-It's that riders aged 75+ logged 2,729 minutes across 57 trips — and **one ride accounts for 2,422 of them.**
+It's what happened with the 75+ group.
 
-Drop that single row and the group's average collapses from 47.9 minutes to 5.5. Nothing else in the dataset changes. 54 of those 57 trips were under ten minutes.
+They logged **2,729 minutes across 57 trips**.
 
-What makes this worth showing is that nothing in the pipeline would have flagged it. The mean computes cleanly. The chart renders. The bar is tall, legible and completely wrong. A slide reading *75+ riders: 48 min average trip* would survive every review it passed through, because the arithmetic is correct at every step.
+One ride accounts for **2,422 of those minutes**.
 
-The only thing that catches it is asking how many rows the number rests on — a question no tool prompts you to ask.
+Drop that one row and the average falls from **47.9 minutes to 5.5**.
 
-That question costs one line of code. Here it's the difference between a demographic insight and a bike nobody returned.
+Nothing else changes.
+
+54 of those 57 trips were under ten minutes.
+
+And here's the uncomfortable part:
+
+**nothing in the normal analysis would necessarily flag this.**
+
+The average calculates correctly.
+
+The chart renders correctly.
+
+The bar is there.
+
+And a presentation saying *"75+ riders average 48-minute trips"* would look perfectly reasonable.
+
+The only thing that catches it is asking:
+
+**"How many rows is this number actually based on?"**
+
+That question costs one line of code.
+
+Here, it is the difference between an interesting demographic finding and a bike that probably wasn't returned.
