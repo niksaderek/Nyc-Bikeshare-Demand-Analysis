@@ -310,36 +310,17 @@ jupyter notebook notebook.ipynb
 
 # The part I found most interesting
 
-The most important finding isn't that Wednesday is the busiest day or that Grove St PATH is the most popular station.
+The 75+ group averaged **47.9 minutes per trip**.
 
-It's what happened with the 75+ group.
+Sounds interesting — until you look at the data.
 
-They logged **2,729 minutes across 57 trips**.
+They had **57 trips**. One ride lasted **2,422 minutes**, accounting for **88.8% of the group's total riding time**.
 
-One ride accounts for **2,422 of those minutes**.
+Remove that one row and the average drops to **5.5 minutes**. **54 of 57 trips were under 10 minutes.**
 
-Drop that one row and the average falls from **47.9 minutes to 5.5**.
+The average was correct. The conclusion would have been wrong.
 
-Nothing else changes.
+**Always ask: how many rows is this number actually based on?**
 
-54 of those 57 trips were under ten minutes.
+Here, that one question separates an interesting finding from a bike that probably wasn't returned.
 
-And here's the uncomfortable part:
-
-**nothing in the normal analysis would necessarily flag this.**
-
-The average calculates correctly.
-
-The chart renders correctly.
-
-The bar is there.
-
-And a presentation saying *"75+ riders average 48-minute trips"* would look perfectly reasonable.
-
-The only thing that catches it is asking:
-
-**"How many rows is this number actually based on?"**
-
-That question costs one line of code.
-
-Here, it is the difference between an interesting demographic finding and a bike that probably wasn't returned.
