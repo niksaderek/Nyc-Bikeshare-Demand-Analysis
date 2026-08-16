@@ -288,7 +288,7 @@ I looked at:
 ## Repository
 
 ```text
-nyc-bikeshare-demand-analysis/
+Nyc-Bikeshare-Demand-Analysis/
 │
 ├── notebook.ipynb
 ├── New York Citi Bikes_Raw Data - NYCitiBikes.csv
@@ -300,8 +300,8 @@ nyc-bikeshare-demand-analysis/
 The notebook contains the full analysis.
 
 ```bash
-git clone https://github.com/niksaderek/nyc-bikeshare-demand-analysis.git
-cd nyc-bikeshare-demand-analysis
+git clone https://github.com/niksaderek/Nyc-Bikeshare-Demand-Analysis.git
+cd Nyc-Bikeshare-Demand-Analysis
 pip install pandas matplotlib jupyter
 jupyter notebook notebook.ipynb
 ```
