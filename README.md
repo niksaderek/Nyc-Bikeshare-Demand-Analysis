@@ -292,7 +292,6 @@ nyc-bikeshare-demand-analysis/
 │
 ├── notebook.ipynb
 ├── New York Citi Bikes_Raw Data - NYCitiBikes.csv
-├── bikes_dataset.csv
 │
 └── docs/
     └── images/
