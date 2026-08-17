@@ -11,11 +11,13 @@
 [![Matplotlib](https://img.shields.io/badge/Matplotlib-Visualization-orange)](https://matplotlib.org/)
 [![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-F37626?logo=jupyter)](https://jupyter.org/)
 
+[View the analysis notebook](notebook.ipynb) · [Jump to key findings](#a-few-things-stood-out) · [Run it locally](#run-the-analysis)
+
 I analysed one year of Citi Bike data from the Jersey City service area to look at demand, rider behaviour, trip duration and a few assumptions that the data might tempt us to make.
 
-The dataset contains **20,400 raw records**, which became **18,449 trips** after cleaning, covering **50 stations and 500 bikes** from January to December 2017.
+The supplied learning extract contains **20,400 records**, which became **18,449 trips** after exact deduplication and removal of incomplete rows. It covers **50 stations and 500 bikes** from January to December 2017.
 
-One important note: the numbers below are based on the full cleaned dataset. The notebook removes the single longest trip later in the analysis, so some numbers there will differ slightly.
+All figures in this case study and notebook use the same 18,449-row analysis frame. Long-duration records are retained and examined rather than silently deleted.
 
 ---
 
@@ -47,11 +49,11 @@ Grove St PATH alone accounts for **12.6% of all trips**.
 
 The top three stations account for roughly **26% of total demand**.
 
-And there's an interesting pattern here: Grove St PATH and Exchange Place are PATH train stations, while Newport PATH also appears near the top.
+There's also a pattern worth testing: Grove St PATH and Exchange Place are PATH train stations, while Newport PATH appears near the top.
 
-That makes sense if Citi Bike is being used for the **first or last part of a commute**.
+This is consistent with Citi Bike being used for the **first or last part of a commute**, but station totals alone cannot confirm that explanation. Hourly origin–destination flows would be needed to test it.
 
-It also means that simply spreading bikes evenly across the network probably isn't the best way to manage supply. The busy transit stations are where the demand is.
+It suggests that equal bike allocation may not match demand. A rebalancing decision would still require station capacity and bike-availability data.
 
 ![Station demand](docs/images/01-hero-top-pickup-locations.png)
 
@@ -78,7 +80,7 @@ The longest trip lasted more than **108 hours**.
 
 There are **103 trips longer than one hour**.
 
-That doesn't necessarily mean 103 people decided to go on extremely long bike rides. Some of these are probably bikes that weren't returned properly or other data-quality issues.
+That doesn't necessarily mean 103 people decided to go on extremely long bike rides. Some may be genuine; others may reflect return or data-quality issues. This extract cannot distinguish between them.
 
 The important part is that a handful of extreme values can have a big effect on the average.
 
@@ -200,15 +202,15 @@ That's a tenfold difference in the composition of riders.
 
 ---
 
-# What would I do with this?
+## What would I do with this?
 
 If I were managing the system, a few things would stand out:
 
-### 1. Rebalance around transit stations
+### 1. Investigate rebalancing around transit stations
 
 The demand isn't evenly distributed.
 
-Grove St PATH and Exchange Place alone generate a huge amount of activity, so those locations deserve more attention than an average station.
+Grove St PATH and Exchange Place generate substantial activity. Combine hourly pickups and returns with station capacity and availability before changing bike allocation.
 
 ### 2. Plan for weekday demand
 
@@ -232,7 +234,7 @@ And the most dramatic result — the 75+ group — disappears once you look at t
 
 ---
 
-# How I approached it
+## How I approached it
 
 Nothing particularly fancy.
 
@@ -256,9 +258,10 @@ Conclusions
 
 * Removed duplicates
 * Removed rows with missing values
-* Converted trip duration to numeric
-* Parsed timestamps
-* Created weekday/month variables
+* Parsed mixed-format timestamps with day-first dates
+* Converted and validated numeric fields
+* Flagged trips longer than 60 minutes without deleting them
+* Added assertions for row count, timestamps, age and duration
 * Reduced the dataset from **20,400 → 18,449 trips**
 
 ### Analysis
@@ -278,37 +281,58 @@ I looked at:
 
 ## Tech
 
-**Python**
-**Pandas** — cleaning and analysis
-**Matplotlib** — visualisation
-**Jupyter Notebook** — analysis
+* **Python 3.12**
+* **Pandas** — cleaning and analysis
+* **Matplotlib** — visualisation
+* **Jupyter Notebook** — reproducible analysis
 
 ---
 
-## Repository
+## Data provenance and limitations
+
+This repository uses a **prepared learning extract** supplied for a DataCamp portfolio exercise. The file already contains engineered fields—including age, age group, weekday, season and trip duration in minutes—so it should not be treated as untouched Citi Bike source data.
+
+The repository does not contain documentation for the extract's sampling method. The analysis is therefore descriptive of these records, not necessarily the full 2017 Citi Bike network. It also cannot establish why a pattern occurred. Weather detail, hourly station capacity, bike availability, service incidents and pricing would strengthen the operational conclusions.
+
+The included CSV is retained so the analysis runs from a clean clone. It remains subject to the original data provider's terms.
+
+---
+
+## Repository structure
 
 ```text
 Nyc-Bikeshare-Demand-Analysis/
 │
+├── README.md
 ├── notebook.ipynb
-├── New York Citi Bikes_Raw Data - NYCitiBikes.csv
-│
+├── requirements.txt
+├── data/
+│   └── citibike_jc_2017_prepared.csv
 └── docs/
-    └── images/
+    └── images/                  # Charts used in this case study
 ```
 
-The notebook contains the full analysis.
+The notebook contains the complete, executed analysis and validation checks.
+
+## Run the analysis
 
 ```bash
 git clone https://github.com/niksaderek/Nyc-Bikeshare-Demand-Analysis.git
 cd Nyc-Bikeshare-Demand-Analysis
-pip install pandas matplotlib jupyter
+
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# macOS/Linux: source .venv/bin/activate
+
+python -m pip install -r requirements.txt
 jupyter notebook notebook.ipynb
 ```
 
+Restart the kernel and run all cells to reproduce the stored outputs. The notebook asserts the expected cleaned row count and fails early if the input or cleaning logic changes.
+
 ---
 
-# The part I found most interesting
+## The part I found most interesting
 
 The 75+ group averaged **47.9 minutes per trip**.
 
@@ -322,5 +346,5 @@ The average was correct. The conclusion would have been wrong.
 
 **Always ask: how many rows is this number actually based on?**
 
-Here, that one question separates an interesting finding from a bike that probably wasn't returned.
+Here, that one question separates a genuine segment pattern from a result dominated by one unusual record.
 
